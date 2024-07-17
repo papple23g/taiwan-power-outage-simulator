@@ -20,6 +20,12 @@ class News(BaseModel):
     date: datetime.date = Field(...)
     title: str
     url: HttpUrl
+    households: int | None = None
+    """停電戶數"""
+    locations: list[str] | None = None
+    """停電縣市"""
+    reason: str | None = None
+    """停電原因"""
 
     @model_validator(mode='before')
     @classmethod
