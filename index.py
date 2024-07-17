@@ -1,34 +1,76 @@
 import datetime
+import json
 from collections import defaultdict
+from dataclasses import dataclass
+from itertools import groupby
 
 from browser import doc, timer, window
-from browser.html import AUDIO, INPUT, SOURCE, SVG
+from browser.html import AUDIO, H1, H2, INPUT, SOURCE, SVG
 
 from libs.type_hint import D3
 
 d3: D3 = window.d3
 tw_svg: D3 = None
 
+
+@dataclass
+class News:
+    """ 停電新聞
+    """
+    date: datetime.date
+    title: str
+    households: int | None = None
+    """停電戶數"""
+    locations: list[str] | None = None
+    """停電縣市"""
+    reason: str | None = None
+    """停電原因"""
+
+    @classmethod
+    def from_dict(cls, news_dict: dict) -> 'News':
+        return cls(
+            date=(
+                datetime.datetime.strptime(
+                    news_dict['date'],
+                    "%Y-%m-%d",
+                ).date()
+            ),
+            title=news_dict['title'],
+            households=news_dict['households'],
+            locations=news_dict['locations'],
+            reason=news_dict['reason'],
+        )
+
+
+# 載入新聞串列
+news_dict_list: list[dict] = json.load(
+    open("data/news_list.json", "r", encoding="utf-8")
+)
+# window.console.log(news_dict_list)
+# print(f"{len(news_dict_list)=}")
+news_list = [
+    News.from_dict(news_dict)
+    for news_dict in news_dict_list
+    if news_dict.get("households", 0) > 0
+]
+# print(f"{len(news_list)=}")
+
+# 🐛debug: 測試一小段近十筆資料
+news_list = news_list[-100:]
+
+# 以日期分組新聞串列
+date_to_news_list_dict = {
+    date: list(news_iter)
+    for date, news_iter in groupby(
+        news_list,
+        key=lambda news: news.date,
+    )
+}
+# print(date_to_news_list_dict)
+# exit()
+
 # 各縣市的停電比值字典
 CITY_TO_BLACKOUT_RATIO_DICT = defaultdict(int)
-
-blackout_event_dict_list = [
-    {
-        "date": datetime.date(2000, 1, 2),
-        "city": "台北市",
-        "ratio": 0.2,
-    },
-    {
-        "date": datetime.date(2000, 1, 3),
-        "city": "高雄市",
-        "ratio": 0.2,
-    },
-    {
-        "date": datetime.date(2000, 1, 5),
-        "city": "台南市",
-        "ratio": 1.0,
-    },
-]
 
 
 def get_blackout_rgb_str(blackout_ratio: float) -> str:
@@ -77,7 +119,7 @@ def shut_off_city(city_name: str, shut_off_ratio: float = 1) -> None:
     """
     # 更新停電比值字典: 設定指定縣市的停電比值
     global CITY_TO_BLACKOUT_RATIO_DICT
-    CITY_TO_BLACKOUT_RATIO_DICT[city_name] = max(
+    CITY_TO_BLACKOUT_RATIO_DICT[city_name] = min(
         CITY_TO_BLACKOUT_RATIO_DICT[city_name]+shut_off_ratio,
         1.0,
     )
@@ -93,9 +135,14 @@ def shut_off_city(city_name: str, shut_off_ratio: float = 1) -> None:
 def simulate_blackout_events(date: datetime.date) -> None:
     """ 模擬指定日期的停電事件: 更新各縣市的停電比值字典
     """
-    for event in blackout_event_dict_list:
-        if event["date"] == date:
-            shut_off_city(event["city"], event["ratio"])
+    # 設定動畫特效為全黑的戶數
+    max_households_threshold = 1_000_000
+
+    for news in date_to_news_list_dict.get(date, []):
+        # print(news)
+        for city_name in news.locations:
+            shut_off_ratio = (news.households/max_households_threshold)**0.5
+            shut_off_city(city_name, shut_off_ratio)
 
 
 def setup_tw_svg() -> None:
@@ -136,6 +183,9 @@ def setup_tw_svg() -> None:
 
 # def main():
 if __name__ == '__main__':
+    # doc <= H1("台灣停電模擬")
+    # doc <= H2("", id="date_h2")
+
     # 初始化 SVG 圖形
     tw_svg = setup_tw_svg()
 
@@ -159,6 +209,9 @@ if __name__ == '__main__':
         """
         global playing_slider_timer
 
+        # 設置播放速度: 每秒播放的天數
+        per_sec_day_count = 10
+
         def add_slider_step() -> None:
             """ 進步滑條的值
             """
@@ -178,7 +231,7 @@ if __name__ == '__main__':
         if playing_slider_timer is None:
             playing_slider_timer = timer.set_interval(
                 add_slider_step,
-                500,
+                1000/per_sec_day_count,
             )
         else:
             timer.clear_interval(playing_slider_timer)
@@ -209,8 +262,8 @@ if __name__ == '__main__':
         )
 
     # 追加一個日期滑條
-    start_date = datetime.date(2000, 1, 1)
-    end_date = datetime.date(2000, 1, 5)
+    start_date = news_list[0].date - datetime.timedelta(days=1)
+    end_date = news_list[-1].date + datetime.timedelta(days=1)
     duration_day_count = (end_date - start_date).days
     slider = INPUT(
         type="range",
