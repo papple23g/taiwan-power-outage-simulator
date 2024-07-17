@@ -114,45 +114,42 @@ def update_tw_svg(
     )
 
 
-def shut_off_city(city_name: str, shut_off_ratio: float = 1) -> None:
-    """ 關閉指定縣市的電力
-    """
-    # 更新停電比值字典: 設定指定縣市的停電比值
-    global CITY_TO_BLACKOUT_RATIO_DICT
-    CITY_TO_BLACKOUT_RATIO_DICT[city_name] = min(
-        CITY_TO_BLACKOUT_RATIO_DICT[city_name]+shut_off_ratio,
-        1.0,
-    )
-
-    # 播放停電音效
-    power_outage_audio = AUDIO(
-        SOURCE(src="audio/power_outage.mp3", type="audio/mpeg")
-    )
-    power_outage_audio.volume = shut_off_ratio
-    power_outage_audio.play()
-
-
 def simulate_blackout_events(date: datetime.date) -> None:
     """ 模擬指定日期的停電事件: 更新各縣市的停電比值字典
     """
+    doc["date_h2"].text = f"{date:%Y-%m-%d}"
+
     # 設定動畫特效為全黑的戶數
     max_households_threshold = 1_000_000
 
+    # 更新停電比值字典: 設定指定縣市的停電比值
+    shut_off_ratio_list = list[float]()
     for news in date_to_news_list_dict.get(date, []):
-        # print(news)
         for city_name in news.locations:
             shut_off_ratio = (news.households/max_households_threshold)**0.5
-            shut_off_city(city_name, shut_off_ratio)
+            CITY_TO_BLACKOUT_RATIO_DICT[city_name] = min(
+                CITY_TO_BLACKOUT_RATIO_DICT[city_name]+shut_off_ratio,
+                1.0,
+            )
+            shut_off_ratio_list.append(shut_off_ratio)
+
+    # 播放停電音效
+    if (max_shut_off_ratio := min(sum(shut_off_ratio_list), 1)) > 0:
+        power_outage_audio = AUDIO(
+            SOURCE(src="audio/power_outage.mp3", type="audio/mpeg")
+        )
+        power_outage_audio.volume = max_shut_off_ratio
+        power_outage_audio.play()
 
 
 def setup_tw_svg() -> None:
     """ 初始化台灣行政區 SVG
     """
     global tw_svg
-    doc <= SVG(id="tw_svg")
+    doc["tw_svg_div"] <= SVG(id="tw_svg")
 
-    width = 960
-    height = 600
+    width = 800
+    height = 800
 
     tw_svg = (
         d3.select("#tw_svg")
@@ -183,9 +180,6 @@ def setup_tw_svg() -> None:
 
 # def main():
 if __name__ == '__main__':
-    # doc <= H1("台灣停電模擬")
-    # doc <= H2("", id="date_h2")
-
     # 初始化 SVG 圖形
     tw_svg = setup_tw_svg()
 
@@ -238,7 +232,7 @@ if __name__ == '__main__':
             playing_slider_timer = None
 
     # 追加一個播放/暫停按鈕
-    doc <= INPUT(
+    doc["slider_div"] <= INPUT(
         type="button",
         value="⏯",
     ).bind(
@@ -265,6 +259,7 @@ if __name__ == '__main__':
     start_date = news_list[0].date - datetime.timedelta(days=1)
     end_date = news_list[-1].date + datetime.timedelta(days=1)
     duration_day_count = (end_date - start_date).days
+    doc["date_h2"].text = f"{start_date:%Y-%m-%d}"
     slider = INPUT(
         type="range",
         min=0,
@@ -274,4 +269,4 @@ if __name__ == '__main__':
         "input",
         lambda ev: on_click_slider(slider),
     )
-    doc <= slider
+    doc["slider_div"] <= slider
