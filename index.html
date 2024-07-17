@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台灣地圖</title>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.11.3/brython.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.11.3/brython_stdlib.min.js"></script>
+    <script type="text/javascript" src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- <script src="https://cdn.plot.ly/plotly-2.32.0.min.js" charset="utf-8"></script> -->
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        svg {
+            width: 100%;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body onload="brython()">
+    <!-- 事先加載音檔，以避免觸發音效時出現載入延遲 -->
+    <audio id="audio" preload="auto">
+        <source src="audio/power_outage.mp3" type="audio/mpeg">
+    </audio>
+    <script type="text/python" src="/index.py"></script>
+</body>
+</html>

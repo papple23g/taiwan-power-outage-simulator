@@ -1,4 +1,4 @@
-from main import NEWS_LIST_JSON_PATH, NewsList
+from libs.news import NEWS_LIST_JSON_PATH, NewsList
 
 if __name__ == '__main__':
 
