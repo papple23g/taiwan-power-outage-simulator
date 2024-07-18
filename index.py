@@ -55,8 +55,8 @@ news_list = [
 ]
 # print(f"{len(news_list)=}")
 
-# 🐛debug: 測試一小段近十筆資料
-news_list = news_list[-100:]
+# # 🐛debug: 測試一小段近十筆資料
+# news_list = news_list[-100:]
 
 # 以日期分組新聞串列
 date_to_news_list_dict = {
@@ -177,7 +177,9 @@ def setup_tw_svg() -> None:
 
     return tw_svg
 
+
 playing_slider_timer = None
+
 
 def play_or_pause_slider(slider: INPUT) -> None:
     """ 播放/暫停按鈕的點擊事件處理函數
@@ -212,6 +214,7 @@ def play_or_pause_slider(slider: INPUT) -> None:
         timer.clear_interval(playing_slider_timer)
         playing_slider_timer = None
 
+
 def on_click_slider(slider: INPUT) -> None:
     """ 滑條的點擊事件處理函數
     """
@@ -226,6 +229,7 @@ def on_click_slider(slider: INPUT) -> None:
     simulate_blackout_events(
         start_date + datetime.timedelta(days=int(slider.value)),
     )
+
 
 # def main():
 if __name__ == '__main__':
@@ -246,7 +250,6 @@ if __name__ == '__main__':
         update_per_ms_int,
     )
 
-
     # 追加一個播放/暫停按鈕
     doc["slider_div"] <= INPUT(
         type="button",
@@ -256,11 +259,21 @@ if __name__ == '__main__':
         lambda ev: play_or_pause_slider(slider),
     )
 
-
     # 追加日期滑條
     start_date = news_list[0].date - datetime.timedelta(days=1)
     end_date = news_list[-1].date + datetime.timedelta(days=1)
     duration_day_count = (end_date - start_date).days
+    date_list = [
+        start_date+datetime.timedelta(days=day_i)
+        for day_i in range(duration_day_count)
+    ]
+    household_count_list = [
+        sum(
+            news.households
+            for news in date_to_news_list_dict.get(date, [])
+        )
+        for date in date_list
+    ]
     doc["date_h2"].text = f"{start_date:%Y-%m-%d}"
     slider = INPUT(
         type="range",
@@ -278,16 +291,14 @@ if __name__ == '__main__':
     config = {
         'type': 'bar',
         'data': {
-            # 'labels': ['2024-07-05', '2024-07-06', '2024-07-07', '2024-07-08', '2024-07-09', '2024-07-16'],
             'labels': [
-                news.date.strftime("%Y-%m-%d")
-                for news in news_list
+                date.strftime("%Y-%m-%d")
+                for date in date_list
             ],
             'datasets': [{
                 'label': 'Households',
-                # 'data': [5041, 3747, 5291, 14, 60248, 2350],
                 'data': [
-                    news.households for news in news_list
+                    household_count for household_count in household_count_list
                 ],
                 'backgroundColor': 'rgba(75, 192, 192, 0.6)',
                 'borderColor': 'rgba(75, 192, 192, 1)',
@@ -299,22 +310,16 @@ if __name__ == '__main__':
             'scales': {
                 'y': {
                     'beginAtZero': True,
-                    'title': {
-                        'display': True,
-                        'text': '停電戶數'
-                    }
+                    # 'type': 'logarithmic',
                 },
-                # 'x': {
-                #     'title': {
-                #         'display': True,
-                #         'text': 'Date'
-                #     }
-                # }
             },
             'plugins': {
+                'legend': {
+                    "display": False,
+                },
                 'title': {
                     'display': True,
-                    'text': 'Household Data Histogram'
+                    'text': '單日停電戶數'
                 }
             }
         }
