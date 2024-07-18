@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field, HttpUrl, RootModel, model_validator
 
 # 初始化新聞列表資料 JSON 檔
 NEWS_LIST_JSON_PATH = (
-    Path(__file__).parent / 'data/news_list.json'
+    Path(__file__).parent.parent / 'data/news_list.json'
 )
 NEWS_LIST_JSON_PATH.parent.mkdir(parents=True, exist_ok=True)
 if not NEWS_LIST_JSON_PATH.exists():

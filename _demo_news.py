@@ -1,7 +1,6 @@
 from libs.news import NEWS_LIST_JSON_PATH, NewsList
 
 if __name__ == '__main__':
-
     # 讀取現有的新聞列表資料
     news_list = NewsList.model_validate_json(
         NEWS_LIST_JSON_PATH.read_text(encoding="utf-8")
@@ -31,13 +30,26 @@ if __name__ == '__main__':
     # for reason in reason_list:
     #     print(reason)
 
-    # 印出停電地點
-    location_str_set = {
-        location_str
+    # # 印出停電地點
+    # location_str_set = {
+    #     location_str
+    #     for news in news_list
+    #     if news.locations is not None
+    #     for location_str in news.locations
+    # }
+    # location_str_list = sorted(list(location_str_set))
+    # for location_str in location_str_list:
+    #     print(location_str)
+
+    blackout_news_list = [
+        news
         for news in news_list
-        if news.locations is not None
-        for location_str in news.locations
-    }
-    location_str_list = sorted(list(location_str_set))
-    for location_str in location_str_list:
-        print(location_str)
+        if news.reason is not None
+    ]
+    print([
+        {
+            "date": news.date,
+            "households": news.households,
+        }
+        for news in blackout_news_list[-10:]
+    ])

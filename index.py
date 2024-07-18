@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from itertools import groupby
 
 from browser import doc, timer, window
-from browser.html import AUDIO, H1, H2, INPUT, SOURCE, SVG
+from browser.html import AUDIO, INPUT, SOURCE, SVG
 
 from libs.type_hint import D3
 
@@ -177,6 +177,55 @@ def setup_tw_svg() -> None:
 
     return tw_svg
 
+playing_slider_timer = None
+
+def play_or_pause_slider(slider: INPUT) -> None:
+    """ 播放/暫停按鈕的點擊事件處理函數
+    """
+    global playing_slider_timer
+
+    # 設置播放速度: 每秒播放的天數
+    per_sec_day_count = 10
+
+    def add_slider_step() -> None:
+        """ 進步滑條的值
+        """
+        global playing_slider_timer
+        # 若已達最大值，則停止播放
+        if int(slider.value) == int(slider.max):
+            timer.clear_interval(playing_slider_timer)
+            playing_slider_timer = None
+            return
+
+        slider.value = int(slider.value) + 1
+        simulate_blackout_events(
+            start_date + datetime.timedelta(days=int(slider.value)),
+        )
+
+    # 進行滑條播放或者暫停
+    if playing_slider_timer is None:
+        playing_slider_timer = timer.set_interval(
+            add_slider_step,
+            1000/per_sec_day_count,
+        )
+    else:
+        timer.clear_interval(playing_slider_timer)
+        playing_slider_timer = None
+
+def on_click_slider(slider: INPUT) -> None:
+    """ 滑條的點擊事件處理函數
+    """
+    global playing_slider_timer
+
+    # 無條件暫停滑條的播放
+    if playing_slider_timer is not None:
+        timer.clear_interval(playing_slider_timer)
+        playing_slider_timer = None
+
+    # 根據滑條的值呈現對應日期的停電事件
+    simulate_blackout_events(
+        start_date + datetime.timedelta(days=int(slider.value)),
+    )
 
 # def main():
 if __name__ == '__main__':
@@ -196,40 +245,7 @@ if __name__ == '__main__':
         ),
         update_per_ms_int,
     )
-    playing_slider_timer = None
 
-    def play_or_pause_slider(slider: INPUT) -> None:
-        """ 播放/暫停按鈕的點擊事件處理函數
-        """
-        global playing_slider_timer
-
-        # 設置播放速度: 每秒播放的天數
-        per_sec_day_count = 10
-
-        def add_slider_step() -> None:
-            """ 進步滑條的值
-            """
-            global playing_slider_timer
-            # 若已達最大值，則停止播放
-            if int(slider.value) == int(slider.max):
-                timer.clear_interval(playing_slider_timer)
-                playing_slider_timer = None
-                return
-
-            slider.value = int(slider.value) + 1
-            simulate_blackout_events(
-                start_date + datetime.timedelta(days=int(slider.value)),
-            )
-
-        # 進行滑條播放或者暫停
-        if playing_slider_timer is None:
-            playing_slider_timer = timer.set_interval(
-                add_slider_step,
-                1000/per_sec_day_count,
-            )
-        else:
-            timer.clear_interval(playing_slider_timer)
-            playing_slider_timer = None
 
     # 追加一個播放/暫停按鈕
     doc["slider_div"] <= INPUT(
@@ -240,22 +256,8 @@ if __name__ == '__main__':
         lambda ev: play_or_pause_slider(slider),
     )
 
-    def on_click_slider(slider: INPUT) -> None:
-        """ 滑條的點擊事件處理函數
-        """
-        global playing_slider_timer
 
-        # 無條件暫停滑條的播放
-        if playing_slider_timer is not None:
-            timer.clear_interval(playing_slider_timer)
-            playing_slider_timer = None
-
-        # 根據滑條的值呈現對應日期的停電事件
-        simulate_blackout_events(
-            start_date + datetime.timedelta(days=int(slider.value)),
-        )
-
-    # 追加一個日期滑條
+    # 追加日期滑條
     start_date = news_list[0].date - datetime.timedelta(days=1)
     end_date = news_list[-1].date + datetime.timedelta(days=1)
     duration_day_count = (end_date - start_date).days
@@ -265,8 +267,58 @@ if __name__ == '__main__':
         min=0,
         max=duration_day_count,
         value=0,
+        style="width: 100%",
     ).bind(
         "input",
         lambda ev: on_click_slider(slider),
     )
     doc["slider_div"] <= slider
+
+    # 創建圖表配置
+    config = {
+        'type': 'bar',
+        'data': {
+            # 'labels': ['2024-07-05', '2024-07-06', '2024-07-07', '2024-07-08', '2024-07-09', '2024-07-16'],
+            'labels': [
+                news.date.strftime("%Y-%m-%d")
+                for news in news_list
+            ],
+            'datasets': [{
+                'label': 'Households',
+                # 'data': [5041, 3747, 5291, 14, 60248, 2350],
+                'data': [
+                    news.households for news in news_list
+                ],
+                'backgroundColor': 'rgba(75, 192, 192, 0.6)',
+                'borderColor': 'rgba(75, 192, 192, 1)',
+                'borderWidth': 1
+            }]
+        },
+        'options': {
+            'responsive': True,
+            'scales': {
+                'y': {
+                    'beginAtZero': True,
+                    'title': {
+                        'display': True,
+                        'text': '停電戶數'
+                    }
+                },
+                # 'x': {
+                #     'title': {
+                #         'display': True,
+                #         'text': 'Date'
+                #     }
+                # }
+            },
+            'plugins': {
+                'title': {
+                    'display': True,
+                    'text': 'Household Data Histogram'
+                }
+            }
+        }
+    }
+
+    # 創建圖表
+    Chart = window.Chart.new(doc['chart_div'], config)

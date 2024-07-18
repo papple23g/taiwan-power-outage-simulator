@@ -1,71 +1,42 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>台灣停電事件模擬</title>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.11.3/brython.min.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.11.3/brython_stdlib.min.js"></script>
+    <script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.11.3/brython_stdlib.min.js"></script>
     <script type="text/javascript" src="https://d3js.org/d3.v7.min.js"></script>
-    <!-- <script src="https://cdn.plot.ly/plotly-2.32.0.min.js" charset="utf-8"></script> -->
-    <style>
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-        }
-        body {
-            display: flex;
-            flex-direction: column;
-        }
-        /* .container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            box-sizing: border-box;
-        } */
-        h1, h2 {
-            text-align: center;
-            margin: 10px 0;
-        }
-        .grid {
-            /* flex: 1; */
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
-            gap: 20px;
-        }
-        .grid > div {
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 24px;
-        }
-        .grid > div:first-child {
-            grid-row: span 2;
-        }
-        svg {
-            height: 80%;
-        }
-    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body onload="brython()">
+
+<body onload="brython()" class="h-screen">
     <!-- 事先加載音檔，以避免觸發音效時出現載入延遲 -->
     <audio id="audio" preload="auto">
         <source src="audio/power_outage.mp3" type="audio/mpeg">
     </audio>
-    <div class="container">
-        <h1>台灣停電事件模擬</h1>
-        <h2 id="date_h2"></h2>
-        <div class="grid">
-            <div id="tw_svg_div"></div>
-            <div>DIV</div>
-            <div id="slider_div"></div>
+    <div class="flex flex-col h-full">
+        <div class="p-4 flex-none">
+            <h1 class="text-center text-xl font-bold">台灣停電事件模擬</h1>
+        </div>
+        <div class="p-4 flex-none">
+            <h2 id="date_h2" class="text-center text-lg"></h2>
+        </div>
+        <div class="flex flex-1">
+            <div id="tw_svg_div" class="flex-1 flex items-center justify-center"></div>
+            <div class="flex flex-col flex-1">
+                <div class="flex-1 flex items-center justify-center">DIV</div>
+                <div class="m-0"><canvas id="chart_div"></canvas></div>
+                <div></div>
+                <div id="slider_div" class="m-0 flex-1 flex items-center justify-center">
+                </div>
+            </div>
         </div>
     </div>
     <script type="text/python" src="/index.py"></script>
 </body>
+
 </html>
