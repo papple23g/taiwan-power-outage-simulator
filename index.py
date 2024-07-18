@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from itertools import groupby
 
 from browser import doc, timer, window
-from browser.html import AUDIO, DIV, INPUT, SOURCE, SVG
+from browser.html import AUDIO, DIV, INPUT, SOURCE, SPAN, SVG
 
 from libs.type_hint import D3
 
@@ -55,8 +55,8 @@ news_list = [
 ]
 # print(f"{len(news_list)=}")
 
-# # 🐛debug: 測試一小段近幾筆資料
-news_list = news_list[-200:]
+# # # 🐛debug: 測試一小段近幾筆資料
+# news_list = news_list[-200:]
 
 # 以日期分組新聞串列
 date_to_news_list_dict = {
@@ -114,6 +114,27 @@ def update_tw_svg(
     )
 
 
+def get_event_div_font_size_pt(household_count: int) -> float:
+    # 設定事件日誌字體大小設定
+    min_font_size_pt = 10
+    max_font_size_pt = 50
+    min_font_size_household_count = 100
+    max_font_size_household_count = 1_000_000
+
+    a = (
+        (max_font_size_pt-min_font_size_pt)
+        / (max_font_size_household_count-min_font_size_household_count)
+    )
+    b = min_font_size_pt - a*min_font_size_household_count
+    return max(
+        min(
+            household_count*a+b,
+            max_font_size_pt,
+        ),
+        min_font_size_pt,
+    )
+
+
 def simulate_blackout_events(date: datetime.date) -> None:
     """ 模擬指定日期的停電事件: 更新各縣市的停電比值字典
     """
@@ -123,30 +144,52 @@ def simulate_blackout_events(date: datetime.date) -> None:
     max_households_threshold = 1_000_000
 
     # 遍歷處理當天的停電事件
-    shut_off_ratio_list = list[float]()
+    darkness_ratio_list = list[float]()
     for news in date_to_news_list_dict.get(date, []):
-
         # 更新停電比值字典: 設定指定縣市的停電比值
         for city_name in news.locations:
-            shut_off_ratio = (news.households/max_households_threshold)**0.5
+            darkness_ratio = max(
+                (news.households/max_households_threshold)**0.5,
+                0.1,
+            )
             CITY_TO_BLACKOUT_RATIO_DICT[city_name] = min(
-                CITY_TO_BLACKOUT_RATIO_DICT[city_name]+shut_off_ratio,
+                CITY_TO_BLACKOUT_RATIO_DICT[city_name]+darkness_ratio,
                 1.0,
             )
-            shut_off_ratio_list.append(shut_off_ratio)
+            darkness_ratio_list.append(darkness_ratio)
 
         # 追加停電事件日誌跑馬燈
+        font_size_pt = get_event_div_font_size_pt(
+            household_count=news.households
+        )
+        locations_str = (
+            "全台" if len(news.locations) >= 20 else
+            ",".join(
+                [location_str for location_str in news.locations]
+            )
+        )
         doc["events_div"] <= DIV(
-            f"{news.date:%Y-%m-%d} {news.title} {news.households} 戶",
+            [
+                SPAN(f"{news.date:%Y-%m-%d} "),
+                SPAN(
+                    f"[{locations_str} +{news.households:,}戶] ",
+                    style="color: blue;",
+                ),
+                SPAN(f"{news.title}"),
+            ],
+            style=f"font-size: {font_size_pt}pt"
         )
         doc["events_div"].scrollTop = doc["events_div"].scrollHeight
 
     # 播放停電音效
-    if (max_shut_off_ratio := min(sum(shut_off_ratio_list), 1)) > 0:
+    if (power_outage_volume_ratio := min(sum(darkness_ratio_list), 1)) > 0:
         power_outage_audio = AUDIO(
             SOURCE(src="audio/power_outage.mp3", type="audio/mpeg")
         )
-        power_outage_audio.volume = max_shut_off_ratio
+        power_outage_audio.volume = max(
+            power_outage_volume_ratio,
+            0.3,
+        )
         power_outage_audio.play()
 
 
@@ -156,19 +199,16 @@ def setup_tw_svg() -> None:
     global tw_svg
     doc["tw_svg_div"] <= SVG(id="tw_svg")
 
-    width = 800
-    height = 800
-
     tw_svg = (
         d3.select("#tw_svg")
-        .attr("viewBox", f"0 0 {width} {height}")
+        .attr("viewBox", "0 200 600 800")
     )
 
     projection = (
         d3.geoMercator()
         .center([121, 24])
         .scale(8000)
-        .translate([width / 2, height / 2])
+        .translate([600 / 2, 800 / 2])
     )
 
     path = d3.geoPath().projection(projection)
@@ -195,7 +235,7 @@ def play_or_pause_slider(slider: INPUT) -> None:
     global PLAYING_SLIDER_TIMER
 
     # 設置播放速度: 每秒播放的天數
-    per_sec_day_count = 100
+    per_sec_day_count = 15
 
     def add_slider_step() -> None:
         """ 進步滑條的值
