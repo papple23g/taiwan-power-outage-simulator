@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from itertools import groupby
 
 from browser import doc, timer, window
-from browser.html import AUDIO, INPUT, SOURCE, SVG
+from browser.html import AUDIO, DIV, INPUT, SOURCE, SVG
 
 from libs.type_hint import D3
 
@@ -55,8 +55,8 @@ news_list = [
 ]
 # print(f"{len(news_list)=}")
 
-# # 🐛debug: 測試一小段近十筆資料
-# news_list = news_list[-100:]
+# # 🐛debug: 測試一小段近幾筆資料
+news_list = news_list[-200:]
 
 # 以日期分組新聞串列
 date_to_news_list_dict = {
@@ -122,9 +122,11 @@ def simulate_blackout_events(date: datetime.date) -> None:
     # 設定動畫特效為全黑的戶數
     max_households_threshold = 1_000_000
 
-    # 更新停電比值字典: 設定指定縣市的停電比值
+    # 遍歷處理當天的停電事件
     shut_off_ratio_list = list[float]()
     for news in date_to_news_list_dict.get(date, []):
+
+        # 更新停電比值字典: 設定指定縣市的停電比值
         for city_name in news.locations:
             shut_off_ratio = (news.households/max_households_threshold)**0.5
             CITY_TO_BLACKOUT_RATIO_DICT[city_name] = min(
@@ -132,6 +134,12 @@ def simulate_blackout_events(date: datetime.date) -> None:
                 1.0,
             )
             shut_off_ratio_list.append(shut_off_ratio)
+
+        # 追加停電事件日誌跑馬燈
+        doc["events_div"] <= DIV(
+            f"{news.date:%Y-%m-%d} {news.title} {news.households} 戶",
+        )
+        doc["events_div"].scrollTop = doc["events_div"].scrollHeight
 
     # 播放停電音效
     if (max_shut_off_ratio := min(sum(shut_off_ratio_list), 1)) > 0:
@@ -178,25 +186,25 @@ def setup_tw_svg() -> None:
     return tw_svg
 
 
-playing_slider_timer = None
+PLAYING_SLIDER_TIMER = None
 
 
 def play_or_pause_slider(slider: INPUT) -> None:
     """ 播放/暫停按鈕的點擊事件處理函數
     """
-    global playing_slider_timer
+    global PLAYING_SLIDER_TIMER
 
     # 設置播放速度: 每秒播放的天數
-    per_sec_day_count = 10
+    per_sec_day_count = 100
 
     def add_slider_step() -> None:
         """ 進步滑條的值
         """
-        global playing_slider_timer
+        global PLAYING_SLIDER_TIMER
         # 若已達最大值，則停止播放
         if int(slider.value) == int(slider.max):
-            timer.clear_interval(playing_slider_timer)
-            playing_slider_timer = None
+            timer.clear_interval(PLAYING_SLIDER_TIMER)
+            PLAYING_SLIDER_TIMER = None
             return
 
         slider.value = int(slider.value) + 1
@@ -205,30 +213,78 @@ def play_or_pause_slider(slider: INPUT) -> None:
         )
 
     # 進行滑條播放或者暫停
-    if playing_slider_timer is None:
-        playing_slider_timer = timer.set_interval(
+    if PLAYING_SLIDER_TIMER is None:
+        PLAYING_SLIDER_TIMER = timer.set_interval(
             add_slider_step,
             1000/per_sec_day_count,
         )
     else:
-        timer.clear_interval(playing_slider_timer)
-        playing_slider_timer = None
+        timer.clear_interval(PLAYING_SLIDER_TIMER)
+        PLAYING_SLIDER_TIMER = None
 
 
 def on_click_slider(slider: INPUT) -> None:
     """ 滑條的點擊事件處理函數
     """
-    global playing_slider_timer
+    global PLAYING_SLIDER_TIMER
 
     # 無條件暫停滑條的播放
-    if playing_slider_timer is not None:
-        timer.clear_interval(playing_slider_timer)
-        playing_slider_timer = None
+    if PLAYING_SLIDER_TIMER is not None:
+        timer.clear_interval(PLAYING_SLIDER_TIMER)
+        PLAYING_SLIDER_TIMER = None
 
     # 根據滑條的值呈現對應日期的停電事件
     simulate_blackout_events(
         start_date + datetime.timedelta(days=int(slider.value)),
     )
+
+
+def plot_households(
+    date_list: list[datetime.date],
+    household_count_list: list[int],
+) -> None:
+    """ 繪製單日停電戶數的柱狀圖
+    """
+    # 創建圖表配置
+    config = {
+        'type': 'bar',
+        'data': {
+            'labels': [
+                date.strftime("%Y-%m-%d")
+                for date in date_list
+            ],
+            'datasets': [{
+                'label': 'Households',
+                'data': [
+                    household_count for household_count in household_count_list
+                ],
+                'backgroundColor': 'rgba(75, 192, 192, 0.6)',
+                'borderColor': 'rgba(75, 192, 192, 1)',
+                'borderWidth': 1
+            }]
+        },
+        'options': {
+            'responsive': True,
+            'scales': {
+                'y': {
+                    'beginAtZero': True,
+                    # 'type': 'logarithmic',
+                },
+            },
+            'plugins': {
+                'legend': {
+                    "display": False,
+                },
+                'title': {
+                    'display': True,
+                    'text': '單日停電戶數'
+                }
+            }
+        }
+    }
+
+    # 創建圖表
+    window.Chart.new(doc['chart_div'], config)
 
 
 # def main():
@@ -287,43 +343,5 @@ if __name__ == '__main__':
     )
     doc["slider_div"] <= slider
 
-    # 創建圖表配置
-    config = {
-        'type': 'bar',
-        'data': {
-            'labels': [
-                date.strftime("%Y-%m-%d")
-                for date in date_list
-            ],
-            'datasets': [{
-                'label': 'Households',
-                'data': [
-                    household_count for household_count in household_count_list
-                ],
-                'backgroundColor': 'rgba(75, 192, 192, 0.6)',
-                'borderColor': 'rgba(75, 192, 192, 1)',
-                'borderWidth': 1
-            }]
-        },
-        'options': {
-            'responsive': True,
-            'scales': {
-                'y': {
-                    'beginAtZero': True,
-                    # 'type': 'logarithmic',
-                },
-            },
-            'plugins': {
-                'legend': {
-                    "display": False,
-                },
-                'title': {
-                    'display': True,
-                    'text': '單日停電戶數'
-                }
-            }
-        }
-    }
-
-    # 創建圖表
-    Chart = window.Chart.new(doc['chart_div'], config)
+    # # 繪製單日停電戶數的柱狀圖
+    # plot_households(date_list, household_count_list)

@@ -23,16 +23,14 @@
             <h1 class="text-center text-xl font-bold">台灣停電事件模擬</h1>
         </div>
         <div class="p-4 flex-none">
-            <h2 id="date_h2" class="text-center text-lg"></h2>
+            <h2 id="date_h2" class="text-center text-2xl font-bold"></h2>
         </div>
-        <div class="flex flex-1">
-            <div id="tw_svg_div" class="flex-1 flex items-center justify-center"></div>
+        <div class="flex flex-1" style="height: 100%;">
+            <div id="tw_svg_div" class="flex-none w-2/5 flex items-start justify-center"></div>
             <div class="flex flex-col flex-1">
-                <div class="flex-1 flex items-center justify-center">DIV</div>
-                <div class="m-0"><canvas id="chart_div"></canvas></div>
-                <div></div>
-                <div id="slider_div" class="m-0 flex-1 flex items-center justify-center">
-                </div>
+                <div id="events_div" style="overflow-y:hidden; height: 600px;"></div>
+                <!-- <div class="m-0"><canvas id="chart_div"></canvas></div> -->
+                <div id="slider_div" class="mt-auto"></div>
             </div>
         </div>
     </div>
