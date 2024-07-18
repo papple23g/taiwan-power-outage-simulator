@@ -7,6 +7,7 @@ from itertools import groupby
 from browser import doc, timer, window
 from browser.html import AUDIO, DIV, INPUT, SOURCE, SPAN, SVG
 
+from libs.reason_emoji import get_reason_emoji
 from libs.type_hint import D3
 
 d3: D3 = window.d3
@@ -168,14 +169,20 @@ def simulate_blackout_events(date: datetime.date) -> None:
                 [location_str for location_str in news.locations]
             )
         )
+        reason_emoji = get_reason_emoji(reason=news.reason)
         doc["events_div"] <= DIV(
             [
+                # 停電時間
                 SPAN(f"{news.date:%Y-%m-%d} "),
+                # 停電縣市+戶數
                 SPAN(
                     f"[{locations_str} +{news.households:,}戶] ",
                     style="color: blue;",
                 ),
-                SPAN(f"{news.title}"),
+                # 停電原因 emoji
+                SPAN(reason_emoji),
+                # 新聞標題
+                SPAN(news.title),
             ],
             style=f"font-size: {font_size_pt}pt"
         )
@@ -235,7 +242,7 @@ def play_or_pause_slider(slider: INPUT) -> None:
     global PLAYING_SLIDER_TIMER
 
     # 設置播放速度: 每秒播放的天數
-    per_sec_day_count = 15
+    per_sec_day_count = 30
 
     def add_slider_step() -> None:
         """ 進步滑條的值

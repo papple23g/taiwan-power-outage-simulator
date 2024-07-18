@@ -1,4 +1,5 @@
 from libs.news import NEWS_LIST_JSON_PATH, NewsList
+from libs.reason_emoji import get_reason_emoji
 
 if __name__ == '__main__':
     # 讀取現有的新聞列表資料
@@ -20,15 +21,20 @@ if __name__ == '__main__':
     # # 印出停電筆數
     # print(sum(news.reason is not None for news in news_list))
 
-    # # 印出停電原因
-    # reason_set = {
-    #     news.reason
-    #     for news in news_list
-    #     if news.reason is not None
-    # }
-    # reason_list = sorted(list(reason_set))
-    # for reason in reason_list:
-    #     print(reason)
+    # 印出停電原因
+    reason_set = {
+        news.reason
+        for news in news_list
+        if news.reason is not None
+    }
+    reason_list = sorted(list(reason_set))
+    emojied_reason_str_list = list[str]()
+    for reason in reason_list:
+        reason_emoji = get_reason_emoji(reason)
+        assert reason_emoji != "", reason
+        emojied_reason_str_list.append(reason_emoji+reason)
+    emojied_reason_str_list.sort()
+    print("\n".join(emojied_reason_str_list))
 
     # # 印出停電地點
     # location_str_set = {
@@ -41,15 +47,15 @@ if __name__ == '__main__':
     # for location_str in location_str_list:
     #     print(location_str)
 
-    blackout_news_list = [
-        news
-        for news in news_list
-        if news.reason is not None
-    ]
-    print([
-        {
-            "date": news.date,
-            "households": news.households,
-        }
-        for news in blackout_news_list[-10:]
-    ])
+    # blackout_news_list = [
+    #     news
+    #     for news in news_list
+    #     if news.reason is not None
+    # ]
+    # print([
+    #     {
+    #         "date": news.date,
+    #         "households": news.households,
+    #     }
+    #     for news in blackout_news_list[-10:]
+    # ])
