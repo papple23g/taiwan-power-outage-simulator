@@ -13857,11 +13857,6 @@
     {
         "date": "2024-07-06",
         "title": "彰化8小時兩度停電！民眾喊看到松鼠 台電：強風吹的 - Yahoo奇摩新聞",
-        "households": 3598,
-        "locations": [
-            "台北市"
-        ],
-        "reason": "地下線路開關故障",
         "url": "https://news.google.com/rss/articles/CBMi6gFodHRwczovL3R3Lm5ld3MueWFob28uY29tLyVFNSVCRCVCMCVFNSU4QyU5NjglRTUlQjAlOEYlRTYlOTklODIlRTUlODUlQTklRTUlQkElQTYlRTUlODElOUMlRTklOUIlQkItJUU2JUIwJTkxJUU3JTlDJUJFJUU1JTk2JThBJUU3JTlDJThCJUU1JTg4JUIwJUU2JTlEJUJFJUU5JUJDJUEwLSVFNSU4RiVCMCVFOSU5QiVCQi0lRTUlQkMlQjclRTklQTIlQTglRTUlOTAlQjklRTclOUElODQtMDQzNDI0NTcwLmh0bWzSAQA?oc=5&hl=en-US&gl=US&ceid=US:en"
     },
     {
@@ -13877,16 +13872,16 @@
     {
         "date": "2024-07-07",
         "title": "彰化埔心1562戶凌晨大停電 民眾熱醒、彰化醫院啟動備用電源 - 自由時報",
-        "households": 1562,
-        "locations": [
-            "彰化縣"
-        ],
-        "reason": "切換線路開關故障",
         "url": "https://news.google.com/rss/articles/CBMiNmh0dHBzOi8vbmV3cy5sdG4uY29tLnR3L25ld3MvbGlmZS9icmVha2luZ25ld3MvNDcyODc5OdIBOmh0dHBzOi8vbmV3cy5sdG4uY29tLnR3L2FtcC9uZXdzL2xpZmUvYnJlYWtpbmduZXdzLzQ3Mjg3OTk?oc=5&hl=en-US&gl=US&ceid=US:en"
     },
     {
         "date": "2024-07-07",
         "title": "又停電！豪大雨、線路開關故障 彰化3鄉鎮3598戶停電 - ETtoday新聞雲",
+        "households": 3598,
+        "locations": [
+            "彰化縣"
+        ],
+        "reason": "切換線路開關故障",
         "url": "https://news.google.com/rss/articles/CBMiMWh0dHBzOi8vd3d3LmV0dG9kYXkubmV0L25ld3MvMjAyNDA3MDcvMjc3MjM2My5odG3SATlodHRwczovL3d3dy5ldHRvZGF5Lm5ldC9hbXAvYW1wX25ld3MucGhwNz9uZXdzX2lkPTI3NzIzNjM?oc=5&hl=en-US&gl=US&ceid=US:en"
     },
     {
