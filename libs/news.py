@@ -94,6 +94,10 @@ def update_news_list_json(
     news_list = NewsList.model_validate_json(
         NEWS_LIST_JSON_PATH.read_text(encoding="utf-8")
     ).root
+    news_title_set = {
+        news.title
+        for news in news_list
+    }
     # print(news_list)
 
     try:
@@ -109,8 +113,19 @@ def update_news_list_json(
             _news_list.sort(key=lambda news: news.date)
             for _news in _news_list:
                 logger.debug(_news)
-            logger.success(f"共獲取 {len(_news_list)} 筆新聞")
-            news_list.extend(_news_list)
+
+            # 新增新的新聞至資料庫
+            _new_news_list = []
+            for _news in _news_list:
+                if _news.title not in news_title_set:
+                    _new_news_list.append(_news)
+                    news_title_set.add(_news.title)
+            logger.success(
+                f"{month_1st_date.year}年{month_1st_date.month:02d}月 "
+                f"共有 {len(_news_list)} 筆新聞 "
+                f"({len(_new_news_list)} 筆新的新聞)"
+            )
+            news_list.extend(_new_news_list)
 
             # 跳至下一個月
             month_1st_date = datetime.date(
@@ -121,7 +136,8 @@ def update_news_list_json(
     except Exception as e:
         logger.error(e)
     finally:
-        # 將新聞列表資料寫入 JSON 檔
+        # 排序新聞列表資料並寫入 JSON 檔
+        news_list.sort(key=lambda news: news.date)
         NEWS_LIST_JSON_PATH.write_text(
             NewsList(news_list).model_dump_json(indent=4),
             encoding="utf-8",
@@ -152,6 +168,6 @@ if __name__ == '__main__':
     #     print()
 
     update_news_list_json(
-        start_year_month_int_tuple=(2014, 1),
-        end_year_month_int_tuple=(2024, 7),
+        start_year_month_int_tuple=(2024, 7),
+        end_year_month_int_tuple=(2024, 8),
     )

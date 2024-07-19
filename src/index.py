@@ -52,7 +52,7 @@ news_dict_list: list[dict] = json.load(
 news_list = [
     News.from_dict(news_dict)
     for news_dict in news_dict_list
-    if news_dict.get("households", 0) > 0
+    if news_dict.get("households", 0)
 ]
 # print(f"{len(news_list)=}")
 

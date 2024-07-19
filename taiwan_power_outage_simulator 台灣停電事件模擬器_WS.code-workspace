@@ -14,5 +14,39 @@
 		pip install -U git+https://github.com/papple23g/mockbrython.git
 		*/
 		"python.defaultInterpreterPath": "~\\venvs\\tw_power_outage_log_venv\\Scripts\\python.exe",
+	},
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				/*
+					python -m http.server 8000
+				*/
+				"name": "HTTP Server",
+				"type": "debugpy",
+				"request": "launch",
+				"module": "http.server",
+				"args": [
+					"8000"
+				],
+				"console": "integratedTerminal"
+			},
+			{
+				/*
+					pytest -vv -s --disable-warnings
+				*/
+				"name": "Pytest",
+				"type": "debugpy",
+				"request": "launch",
+				"module": "pytest",
+				"args": [
+					"-vv",
+					"-s",
+					"--disable-warnings"
+				],
+				"console": "integratedTerminal"
+			}
+		],
+		"compounds": []
 	}
 }

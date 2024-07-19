@@ -87,7 +87,7 @@ EMOJI_TO_KW_LIST_DICT = {
         "落石", "公路崩坍",
     ],
     "🔌": [
-        "分支", "分歧", "跳脫", "故障", "地下", "機組", "線路", "匯流", "匯流", "保險絲", "饋線", "電桿", "電線桿", "變電所", "電廠", "電纜", "端頭",
+        "分支", "分歧", "跳脫", "故障", "地下", "機組", "線路", "匯流", "匯流", "保險絲", "饋線", "電桿", "電線桿", "變電所", "電廠", "電纜", "端頭", "熔絲", "開關",
     ],
     "😷": [
         "懸浮微粒",
@@ -99,12 +99,10 @@ EMOJI_TO_KW_LIST_DICT = {
 
 
 def get_reason_emoji(reason: str) -> str:
-    reason_emoji = ""
-    for _reason_emoji, reason_kw_str_list in EMOJI_TO_KW_LIST_DICT.items():
+    for reason_emoji, reason_kw_str_list in EMOJI_TO_KW_LIST_DICT.items():
         if any(
             reason_kw_str in reason
             for reason_kw_str in reason_kw_str_list
         ):
-            reason_emoji = _reason_emoji
-            break
-    return reason_emoji
+            return reason_emoji
+    return ""
