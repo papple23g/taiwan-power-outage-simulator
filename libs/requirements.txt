@@ -1,3 +1,4 @@
 pydantic==2.8.2
 loguru==0.7.2
 gnews==0.3.7
+pytest==8.2.2

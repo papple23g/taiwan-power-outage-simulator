@@ -167,7 +167,8 @@ if __name__ == '__main__':
     #     print(news.model_dump_json(indent=2))
     #     print()
 
+    today = datetime.date.today()
     update_news_list_json(
-        start_year_month_int_tuple=(2024, 7),
-        end_year_month_int_tuple=(2024, 8),
+        start_year_month_int_tuple=(today.year, today.month),
+        end_year_month_int_tuple=(today.year, today.month),
     )
